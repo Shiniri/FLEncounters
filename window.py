@@ -1,10 +1,12 @@
 # GUI
 import tkinter as tk
-from tkinter import ttk
-from tkinter import filedialog
-from tkinter import messagebox
+from tkinter import ttk, filedialog, messagebox
 
-from custom_widgets import FactionSelector
+from custom_widgets import (
+    FactionSelector, 
+    DensityRestrictionSelector, 
+    VariableSelector, VariableFrame
+)
 
 # Parsing
 from ini_parser import Ini_Parser
@@ -67,16 +69,32 @@ class Encounters(tk.Tk):
         self.encounter_label.pack(pady=10)
         self.system_label.pack(pady=10)
 
-        # Read data & populate window accordingly
+        # Read data
         self.available_pilots = self.create_pilot_list()
         self.available_factions = self.create_faction_list()
         self.available_shipclasses = self.create_shipclass_list()
         self.available_npcclasses = self.create_npcclass_list()
 
+        #-----------------------#
+        #   WIDGETS START HERE  #
+        #-----------------------#
+
+        #   RIGHT / SYSTEM COLUMN   #
+
         # Faction Selector
         self.faction_selector = FactionSelector(parent=self.right_frame, faction_list=self.available_factions)
         self.faction_selector.pack(pady=10)
 
+        # Density Restriction
+        self.density_restriction_selector = DensityRestrictionSelector(parent=self.right_frame, pilot_list=self.available_pilots)
+        self.density_restriction_selector.pack(pady=10)
+
+        # Relief time / Repop time / Density
+        self.variable_frame = VariableFrame(parent=self.right_frame)
+        self.variable_frame.pack(pady=10)
+
+        #   LEFT / ENCOUNTER COLUMN     #
+        
 
     def create_pilot_list(self):
 
