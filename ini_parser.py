@@ -25,7 +25,7 @@ class Ini_Parser():
         {"affiliation" : ["gd_z_grp"], "npc_ship" : ["gd_z_ge_fighter4_d9", "gd_z_ge_fighter4_d10"], space_costume : ["comm_br_elite", "ge_male6_head", "comm_br_darcy"]}
     """
 
-    def read(self, ini_path) -> list(Dict[str, list]):
+    def read(self, ini_path):
         # Get string from file
         try:
             with open(ini_path, "r") as ini_file:
@@ -34,7 +34,7 @@ class Ini_Parser():
         except:
             return []
         
-    def parse(self, file_content : str) -> list(Dict[str, list]):
+    def parse(self, file_content : str):
         # This will looks like
         # [{key: [values], key2: [values]}, {...}, ...]
         result = []
