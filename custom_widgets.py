@@ -3,6 +3,11 @@ from tkinter.ttk import Combobox
 from tkinter import Frame, Entry, StringVar, Label
 
 
+#-----------------------#
+#   RIGHT-SIDE WIDGETS  #
+#-----------------------#
+
+
 class FactionSelector(Frame):
 
     def __init__(self, parent, faction_list):
@@ -68,4 +73,112 @@ class VariableFrame(Frame):
     def __init__(self, parent):
         super().__init__(parent)
 
-        # [...]
+        # Setter thingies
+        self.relief_time_setter = VariableSelector(self, "Relief time:")
+        self.relief_time_setter.pack(side="top", fill="x")
+        self.repop_time_setter = VariableSelector(self, "Repop time:")
+        self.repop_time_setter.pack(side="top", fill="x")
+        self.density_setter = VariableSelector(self, "Density:")
+        self.density_setter.pack(side="top", fill="x")
+
+        # Calculate spawn chance
+        spawn_chance_var = StringVar()
+        self.spawn_chance_label = Label(
+            self,
+            textvariable=spawn_chance_var,
+            font=("Arial, 14")
+        )
+        spawn_chance_var.set("Spawn Chance: 0.0%")
+        self.spawn_chance_label.pack(side="top", fill="x", pady=5)
+
+
+#-----------------------#
+#   LEFT-SIDE WIDGETS   #
+#-----------------------#
+        
+
+class Min_Max_Setter(Frame):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.label = Label(self, text="MIN / MAX:")
+        self.label.pack(side="left", padx=2)
+
+        self.entry_min_var = StringVar()
+        self.entry_min = Entry(self, textvariable=self.entry_min_var, width=5)
+        self.entry_min_var.set("INT")
+        self.entry_min.pack(side="left", padx=2)
+
+        self.entry_max_var = StringVar()
+        self.entry_max = Entry(self, textvariable=self.entry_max_var, width=5)
+        self.entry_max_var.set("INT")
+        self.entry_max.pack(side="left", padx=2)
+        
+
+class Core_Encounter_Specs(Frame):
+
+    def __init__(self, parent, ship_list, job_list, formation_list):
+        super().__init__(parent)
+
+        # Ship Class
+        self.ship_by_class_var = StringVar()
+        self.ship_by_class_dropdown = Combobox(
+            self, 
+            textvariable=self.ship_by_class_var,
+            values=ship_list
+        )
+        self.ship_by_class_var.set("Ship by class:")
+        self.ship_by_class_dropdown.pack(side="top", pady=2)
+
+        # Min / Max of what @Milo?
+        self.min_max_setter = Min_Max_Setter(self)
+        self.min_max_setter.pack(side="top", pady=5)
+
+        # Job override
+        self.job_override_var = StringVar()
+        self.job_override_dropdown = Combobox(
+            self,
+            textvariable=self.job_override_var,
+            values=job_list
+        )
+        self.job_override_var.set("Job Override: ")
+        self.job_override_dropdown.pack(side="top", pady=2)
+
+        # Class override
+        self.class_override_var = StringVar()
+        self.class_override_dropdown = Combobox(
+            self,
+            textvariable=self.class_override_var,
+            values=ship_list
+        )
+        self.class_override_var.set("Class Override: ")
+        self.class_override_dropdown.pack(side="top", pady=2)
+
+        # Formation
+        self.formation_var = StringVar()
+        self.formation_dropdown = Combobox(
+            self,
+            textvariable=self.formation_var,
+            values=formation_list
+        )
+        self.formation_var.set("Formation: ")
+        self.formation_dropdown.pack(side="top", pady=2)
+
+        # Simultanious Creation
+        self.simultanious_creation_var = StringVar()
+        self.simultanious_creation_dropdown = Combobox(
+            self,
+            textvariable=self.simultanious_creation_var,
+            values=["YES", "NO"]
+        )
+        self.simultanious_creation_var.set("Simultanious Creation: ")
+        self.simultanious_creation_dropdown.pack(side="top", pady=2)
+
+        # Creation Distance
+        self.creation_distance_setter = VariableSelector(self, "Creation Distance: ")
+        self.creation_distance_setter.pack(side="top", pady=2)
+
+        # Permutation Weight
+        self.permutation_weight_setter = VariableSelector(self, "Permutation Weight: ")
+        self.permutation_weight_setter.pack(side="top", pady=2)

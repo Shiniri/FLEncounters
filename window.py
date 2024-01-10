@@ -1,3 +1,13 @@
+
+#-------------------------------------------------------------------------------#
+#   ~ The things yond require doing ~                                           #
+#   1. Reduceth the amount of boileth'r'd plates in the list functs             #
+#   2. Unifyeth frames things wend into                                         #
+#   3. Some variables couldst beest m're descriptive                            #
+#   4. Map dropdowns to more descriptive names                                  #
+#   5. Allign things in the right column more nicely                            #
+#-------------------------------------------------------------------------------#
+
 # GUI
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -5,7 +15,8 @@ from tkinter import ttk, filedialog, messagebox
 from custom_widgets import (
     FactionSelector, 
     DensityRestrictionSelector, 
-    VariableSelector, VariableFrame
+    VariableSelector, VariableFrame,
+    Core_Encounter_Specs
 )
 
 # Parsing
@@ -74,6 +85,7 @@ class Encounters(tk.Tk):
         self.available_factions = self.create_faction_list()
         self.available_shipclasses = self.create_shipclass_list()
         self.available_npcclasses = self.create_npcclass_list()
+        self.available_formations = self.create_formations_list()
 
         #-----------------------#
         #   WIDGETS START HERE  #
@@ -94,6 +106,15 @@ class Encounters(tk.Tk):
         self.variable_frame.pack(pady=10)
 
         #   LEFT / ENCOUNTER COLUMN     #
+
+        # Core Encounter Settings
+        self.core_encounter_settings = Core_Encounter_Specs(
+            parent=self.left_frame,
+            ship_list=self.available_shipclasses,
+            job_list=self.available_pilots,
+            formation_list=self.available_formations
+        )
+        self.core_encounter_settings.pack(pady=10)
         
 
     def create_pilot_list(self):
@@ -154,3 +175,17 @@ class Encounters(tk.Tk):
         # return unique npc ships
         npc_classes = [block['npc_class'] for block in npc_ini if 'npc_class' in block]
         return list(set(list(itertools.chain.from_iterable(npc_classes))))
+
+
+    def create_formations_list(self):
+        formations_path = self.install_directory + "/DATA/MISSIONS/formations.ini"
+        formation_ini = self.parser.read(formations_path)
+
+        # BOILERPLATETETET
+        if formation_ini == []:
+            messagebox.showerror("Error", "Failed to find formations.ini at specified location.")
+            self.destroy()
+
+        # return unique formations
+        formations = [block['nickname'] for block in formation_ini if 'nickname' in block]
+        return list(set(list(itertools.chain.from_iterable(formations))))
