@@ -5,12 +5,14 @@
 #   2. Unifyeth frames things wend into                                         #
 #   3. Some variables couldst beest m're descriptive                            #
 #   4. Map dropdowns to more descriptive names                                  #
-#   5. Allign things in the right column more nicely                            #
+#   5. Allign things more nicely                                                #
+#   6. Feature: Open existing Encounters                                        #
+#   7. Split Columns into multiple files for ease of access                     #
 #-------------------------------------------------------------------------------#
 
 # GUI
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import ttk, filedialog, messagebox, Button, Listbox
 
 from custom_widgets import (
     FactionSelector, 
@@ -41,9 +43,11 @@ def app_loop():
             messagebox.showerror("Error", "No directory selected. The application will close.")
             root.destroy()
 
+    # Root properties
     root = tk.Tk()
     root.title("Select Directory")
     root.geometry("300x100")
+
     tk.Label(root, text="Please provide a Freelancer EXE path.").pack(pady=10)
     select_button = tk.Button(root, text="Select Directory", command=on_select_directory)
     select_button.pack(pady=10)
@@ -57,52 +61,99 @@ class Encounters(tk.Tk):
         self.install_directory = install_directory
         self.parser = Ini_Parser()
         self.title("Encounters")
-        self.geometry("600x400")
+        self.geometry("620x420")
         self.construct_main_window()
 
 
     def construct_main_window(self):
-        # Create two frames for the two columns
+
+        # Create three frames for the three columns
         self.left_frame = ttk.Frame(self)
+        self.centre_frame = ttk.Frame(self)
         self.right_frame = ttk.Frame(self)
 
         # Place the frames in the window
         self.left_frame.grid(row=0, column=0, sticky="nsew")
-        self.right_frame.grid(row=0, column=1, sticky="nsew")
+        self.centre_frame.grid(row=0, column=1, sticky="nsew")
+        self.right_frame.grid(row=0, column=2, sticky="nsew")
 
         # Configure grid columns to equally share space
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
 
         # Add headers
         self.encounter_label = ttk.Label(self.left_frame, text="ENCOUNTER", font=("Arial", 14))
-        self.system_label = ttk.Label(self.right_frame, text="SYSTEM", font=("Arial", 14))
         self.encounter_label.pack(pady=10)
+        self.system_label = ttk.Label(self.centre_frame, text="SYSTEM", font=("Arial", 14))
         self.system_label.pack(pady=10)
+        self.permutation_label = ttk.Label(self.right_frame, text="PERMUTATIONS", font=("Arial", 14))
+        self.permutation_label.pack(pady=10)
 
         # Read data
-        self.available_pilots = self.create_pilot_list()
-        self.available_factions = self.create_faction_list()
-        self.available_shipclasses = self.create_shipclass_list()
-        self.available_npcclasses = self.create_npcclass_list()
-        self.available_formations = self.create_formations_list()
+        self.available_pilots = self.create_list_from_ini_field(
+            "pilots_population.ini",
+            "nickname"
+        )
+        self.available_factions = self.create_list_from_ini_field(
+            "faction_prop.ini",
+            "affiliation"
+        )
+        self.available_shipclasses = self.create_list_from_ini_field(
+            "shipclasses.ini",
+            "member"
+        )
+        self.available_npcclasses = self.create_list_from_ini_field(
+            "npcships.ini",
+            "npc_class"
+        )
+        self.available_formations = self.create_list_from_ini_field(
+            "formations.ini",
+            "nickname"
+        )
 
         #-----------------------#
         #   WIDGETS START HERE  #
         #-----------------------#
 
-        #   RIGHT / SYSTEM COLUMN   #
+        #   RIGHT / PERMUTATIONS COLUMN     #
+        """
+            In the future I would like to parse existing encounters here,
+            so they can be edited easily, which will require a list of existing
+            encounters, which is created from ones already saved.
+            (Difference exporting / saving?) For now I will only put a list
+            of permutations here, because it's quicker to get a usable tool 
+            this way.
+        """
+        self.permutation_listbox = Listbox(self.right_frame)
+        self.permutation_listbox.insert(1, "Default")
+        self.permutation_listbox.activate(1)
+        self.permutation_listbox.pack(pady=10)
+
+        self.add_permutation_button = Button(self.right_frame, text="New Permutation")
+        self.add_permutation_button.pack(pady=10)
+        self.rename_permutation_button = Button(self.right_frame, text="Rename Permutation")
+        self.rename_permutation_button.pack(pady=10)
+        self.delete_permutation_button = Button(self.right_frame, text="Delete Permutation")
+        self.delete_permutation_button.pack(pady=10)
+
+        # The most important button!
+        self.create_encounter_button = Button(self.right_frame, text="CREATE ENCOUNTER!", font=("Arial", 14))
+        self.create_encounter_button.pack(pady=10)
+
+
+        #   CENTRE / SYSTEM COLUMN   #
 
         # Faction Selector
-        self.faction_selector = FactionSelector(parent=self.right_frame, faction_list=self.available_factions)
+        self.faction_selector = FactionSelector(parent=self.centre_frame, faction_list=self.available_factions)
         self.faction_selector.pack(pady=10)
 
         # Density Restriction
-        self.density_restriction_selector = DensityRestrictionSelector(parent=self.right_frame, pilot_list=self.available_pilots)
+        self.density_restriction_selector = DensityRestrictionSelector(parent=self.centre_frame, pilot_list=self.available_pilots)
         self.density_restriction_selector.pack(pady=10)
 
         # Relief time / Repop time / Density
-        self.variable_frame = VariableFrame(parent=self.right_frame)
+        self.variable_frame = VariableFrame(parent=self.centre_frame)
         self.variable_frame.pack(pady=10)
 
         #   LEFT / ENCOUNTER COLUMN     #
@@ -117,75 +168,17 @@ class Encounters(tk.Tk):
         self.core_encounter_settings.pack(pady=10)
         
 
-    def create_pilot_list(self):
+    def create_list_from_ini_field(self, filename, field_name):
 
-        pilot_path = self.install_directory + "/DATA/MISSIONS/pilots_population.ini"
-        pilot_ini = self.parser.read(pilot_path)
+        target_path = self.install_directory + "/DATA/MISSIONS/" + filename
+        ini_file = self.parser.read(target_path)
 
-        # check if there actually is a file there
-        # (parser fails silently)
-        if pilot_ini == []:
-            messagebox.showerror("Error", "Failed to find pilots_populaiton.ini at specified location.")
-            self.destroy()
+        # Check if file is actually there
+        # (parser fails silently / outputs [])
+        if ini_file == []:
+            messagebox.showerror("Error", f"Failed to find {filename} at specified location.")
+            self.destroy
 
-        # return unique pilots
-        pilots = [block['nickname'] for block in pilot_ini if 'nickname' in block]
-        return list(set(list(itertools.chain.from_iterable(pilots))))
-    
-
-    def create_faction_list(self):
-
-        faction_path = self.install_directory + "/DATA/MISSIONS/faction_prop.ini" # Here os.path.join does not work, idk why
-        faction_ini = self.parser.read(faction_path)
-        
-        # check
-        if faction_ini == []:
-            messagebox.showerror("Error", "Failed to find faction_prop.ini at specified location.")
-            self.destroy()
-
-        # return unique factions
-        affiliations = [block['affiliation'] for block in faction_ini if 'affiliation' in block]
-        return list(set(list(itertools.chain.from_iterable(affiliations))))
-    
-
-    def create_shipclass_list(self):
-
-        ship_path = self.install_directory + "/DATA/MISSIONS/shipclasses.ini" # same again
-        ship_ini = self.parser.read(ship_path)
-
-        # Check if file there
-        if ship_ini == []:
-            messagebox.showerror("Error", "Failed to find shipclasses.ini at specified location.")
-            self.destroy()
-
-        # return unique shipclasses
-        shipclasses = [block['member'] for block in ship_ini if 'member' in block]
-        return list(set(list(itertools.chain.from_iterable(shipclasses))))
-    
-
-    def create_npcclass_list(self):
-        npc_path = self.install_directory + "/DATA/MISSIONS/npcships.ini"
-        npc_ini = self.parser.read(npc_path)
-
-        # Tooodle-oo-do-doo
-        if npc_ini == []:
-            messagebox.showerror("Error", "Failed to find npcships.ini at specified location.")
-            self.destroy()
-
-        # return unique npc ships
-        npc_classes = [block['npc_class'] for block in npc_ini if 'npc_class' in block]
-        return list(set(list(itertools.chain.from_iterable(npc_classes))))
-
-
-    def create_formations_list(self):
-        formations_path = self.install_directory + "/DATA/MISSIONS/formations.ini"
-        formation_ini = self.parser.read(formations_path)
-
-        # BOILERPLATETETET
-        if formation_ini == []:
-            messagebox.showerror("Error", "Failed to find formations.ini at specified location.")
-            self.destroy()
-
-        # return unique formations
-        formations = [block['nickname'] for block in formation_ini if 'nickname' in block]
-        return list(set(list(itertools.chain.from_iterable(formations))))
+        # Return unique values for field
+        values = [block[field_name] for block in ini_file if field_name in block]
+        return list(set(list(itertools.chain.from_iterable(values))))

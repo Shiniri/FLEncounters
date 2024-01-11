@@ -1,6 +1,6 @@
 
-from tkinter.ttk import Combobox
-from tkinter import Frame, Entry, StringVar, Label
+from tkinter.ttk import Combobox, Button
+from tkinter import Frame, Entry, StringVar, Label, Toplevel, Checkbutton
 
 
 #-----------------------#
@@ -114,6 +114,25 @@ class Min_Max_Setter(Frame):
         self.entry_max = Entry(self, textvariable=self.entry_max_var, width=5)
         self.entry_max_var.set("INT")
         self.entry_max.pack(side="left", padx=2)
+
+
+class Arrival_Popup(Toplevel):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.buttons = []
+
+        button_texts = [
+            "buzz", "cruise", "object_all", "tradelane",
+            "object_capital", "object_station", "object_jump_gate",
+            "object_docking_ring"
+        ]
+        for button_text in button_texts:
+            self.buttons.append(Checkbutton(self, text=button_text))
+            self.buttons[-1].pack(side="top", pady=2)
+
+        self.save_button = Button(self, text="Save")
+        self.save_button.pack(side="top", pady=2)
         
 
 class Core_Encounter_Specs(Frame):
@@ -175,6 +194,16 @@ class Core_Encounter_Specs(Frame):
         self.simultanious_creation_var.set("Simultanious Creation: ")
         self.simultanious_creation_dropdown.pack(side="top", pady=2)
 
+        # Behaviour
+        self.behaviour_var = StringVar()
+        self.behaviour_var = Combobox(
+            self, 
+            textvariable=self.behaviour_var,
+            values=["trade", "wander", "patrol_path"]
+        )
+        self.behaviour_var.set("Behaviour")
+        self.behaviour_var.pack(side="top", pady=2)
+
         # Creation Distance
         self.creation_distance_setter = VariableSelector(self, "Creation Distance: ")
         self.creation_distance_setter.pack(side="top", pady=2)
@@ -182,3 +211,13 @@ class Core_Encounter_Specs(Frame):
         # Permutation Weight
         self.permutation_weight_setter = VariableSelector(self, "Permutation Weight: ")
         self.permutation_weight_setter.pack(side="top", pady=2)
+
+        # Button which opens window with arrival checkboxes
+        self.checkbox_button = Button(self, text="Set Arrival Type", command=self.open_checkbox_popup)
+        self.checkbox_button.pack(side="top", pady=2)
+
+
+    def open_checkbox_popup(self):
+        top = Arrival_Popup(self)
+        top.title("Set Arrival Types")
+        top.geometry("400x300")
