@@ -20,6 +20,7 @@ from custom_widgets import (
     VariableSelector, VariableFrame,
     Core_Encounter_Specs
 )
+from permutation_state import Permutation_State
 
 # Parsing
 from ini_parser import Ini_Parser
@@ -62,8 +63,12 @@ class Encounters(tk.Tk):
         self.parser = Ini_Parser()
         self.title("Encounters")
         self.geometry("620x420")
-        self.construct_main_window()
+        # Handles saving data the user has entered
+        self.default_permutation_state = Permutation_State()
+        self.permutation_states = [self.default_permutation_state]
+        self.current_permutation_state = self.permutation_states[0]
 
+        self.construct_main_window()
 
     def construct_main_window(self):
 
@@ -115,8 +120,6 @@ class Encounters(tk.Tk):
         #-----------------------#
         #   WIDGETS START HERE  #
         #-----------------------#
-
-        #   RIGHT / PERMUTATIONS COLUMN     #
         """
             In the future I would like to parse existing encounters here,
             so they can be edited easily, which will require a list of existing
@@ -125,9 +128,10 @@ class Encounters(tk.Tk):
             of permutations here, because it's quicker to get a usable tool 
             this way.
         """
-        self.permutation_listbox = Listbox(self.right_frame)
-        self.permutation_listbox.insert(1, "Default")
-        self.permutation_listbox.activate(1)
+
+        #   RIGHT / PERMUTATIONS COLUMN     #
+        
+        self.permutation_listbox = Listbox(self.right_frame, selectmode="SINGLE")
         self.permutation_listbox.pack(pady=10)
 
         self.add_permutation_button = Button(self.right_frame, text="New Permutation")
@@ -140,7 +144,6 @@ class Encounters(tk.Tk):
         # The most important button!
         self.create_encounter_button = Button(self.right_frame, text="CREATE ENCOUNTER!", font=("Arial", 14))
         self.create_encounter_button.pack(pady=10)
-
 
         #   CENTRE / SYSTEM COLUMN   #
 
@@ -166,7 +169,92 @@ class Encounters(tk.Tk):
             formation_list=self.available_formations
         )
         self.core_encounter_settings.pack(pady=10)
-        
+
+        #   Callback binds  #
+
+        # Permutation Selector
+        def _get_and_set_permutation_index(permutation_name):
+            for permutation in self.permutation_states:
+                if permutation.name == permutation_name:
+                    self.current_permutation_state = permutation
+                    return permutation
+                # TODO: Some error handling?
+
+        def _update_window_by_permutation(permutation):
+            # Dropdowns 
+            self.core_encounter_settings.ship_by_class_dropdown.set(permutation.ship_by_class)
+            self.core_encounter_settings.job_override_dropdown.set(permutation.job_override)
+            self.core_encounter_settings.class_override_dropdown.set(permutation.class_override)
+            self.core_encounter_settings.formation_dropdown.set(permutation.formation)
+            self.core_encounter_settings.simultanious_creation_dropdown.set(permutation.simultanious_creation)
+            self.core_encounter_settings.behaviour_combobox.set(permutation.behaviour)
+            
+            self.faction_selector.dropdown.set(permutation.faction[0])
+            self.density_restriction_selector.dropdown.set(permutation.density_restriction[0])
+
+            # INT fields
+            self.core_encounter_settings.min_max_setter.entry_max_var.set(self.current_permutation_state.min_max[0])
+            self.core_encounter_settings.min_max_setter.entry_min_var.set(self.current_permutation_state.min_max[1])
+            self.core_encounter_settings.creation_distance_setter.entry_var.set(self.current_permutation_state.creation_distance)
+            self.core_encounter_settings.permutation_weight_setter.entry_var.set(self.current_permutation_state.permutation_weight)
+            
+            self.faction_selector.entry1_var.set(self.current_permutation_state.faction[1])
+            self.faction_selector.entry2_var.set(self.current_permutation_state.faction[2])
+            self.density_restriction_selector.entry1_var.set(self.current_permutation_state.density_restriction[1])
+            self.variable_frame.relief_time_setter.entry_var.set(self.current_permutation_state.relief)
+            self.variable_frame.repop_time_setter.entry_var.set(self.current_permutation_state.repop)
+            self.variable_frame.density_setter.entry_var.set(self.current_permutation_state.density)
+
+        def _listbox_callback(event):
+            permutation_name = event.widget.get(event.widget.curselection()[0])
+            _update_window_by_permutation(_get_and_set_permutation_index(permutation_name))
+                
+        # <<ListboxSelect>> event does not fucking work. It does weird things
+        # and crashes. I don't want to deal with it, thusly:
+        self.permutation_listbox.bind(
+            "<FocusIn>",
+            _listbox_callback
+        )
+
+        # Dropdowns
+        self.core_encounter_settings.ship_by_class_dropdown.bind(
+            "<<ComboboxSelected>>",
+            self.current_permutation_state.on_ship_select
+        )
+        self.core_encounter_settings.job_override_dropdown.bind(
+            "<<ComboboxSelected>>",
+            self.current_permutation_state.on_job_override_select
+        )
+        self.core_encounter_settings.class_override_dropdown.bind(
+            "<<ComboboxSelected>>",
+            self.current_permutation_state.on_class_override_select
+        )
+        self.core_encounter_settings.formation_dropdown.bind(
+            "<<ComboboxSelected>>",
+            self.current_permutation_state.on_formation_select
+        )
+        self.core_encounter_settings.simultanious_creation_dropdown.bind(
+            "<<ComboboxSelected>>",
+            self.current_permutation_state.on_simultanious_creation_select
+        )
+        self.core_encounter_settings.behaviour_combobox.bind(
+            "<<ComboboxSelected>>",
+            self.current_permutation_state.on_behaviour_select
+        )
+        self.faction_selector.bind(
+            "<<ComboboxSelected>>",
+            self.current_permutation_state.on_faction_select
+        )
+        self.density_restriction_selector.bind(
+            "<<ComboboxSelected>>",
+            self.current_permutation_state.on_density_restriction_select
+        )
+
+        # This has to be done because otherwise the default values won't spawn
+        self.permutation_listbox.insert(0, "Default")
+        self.permutation_listbox.selection_set(0)
+        self.permutation_listbox.focus_set()
+        self.permutation_listbox.event_generate("<FocusIn>")
 
     def create_list_from_ini_field(self, filename, field_name):
 
