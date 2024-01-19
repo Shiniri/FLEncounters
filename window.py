@@ -64,9 +64,7 @@ class Encounters(tk.Tk):
         self.title("Encounters")
         self.geometry("620x420")
         # Handles saving data the user has entered
-        self.default_permutation_state = Permutation_State()
-        self.permutation_states = [self.default_permutation_state]
-        self.current_permutation_state = self.permutation_states[0]
+        self.permutation_states = []
 
         self.construct_main_window()
 
@@ -131,10 +129,14 @@ class Encounters(tk.Tk):
 
         #   RIGHT / PERMUTATIONS COLUMN     #
         
-        self.permutation_listbox = Listbox(self.right_frame, selectmode="SINGLE")
+        self.permutation_listbox = Listbox(self.right_frame, selectmode="SINGLE", exportselection=False)
         self.permutation_listbox.pack(pady=10)
 
-        self.add_permutation_button = Button(self.right_frame, text="New Permutation")
+        def _on_new_permutation():
+            self.permutation_states.append(Permutation_State(f"Default {len(self.permutation_states)+1}"))
+            self.permutation_listbox.insert(2, f"Default {len(self.permutation_states)}")
+
+        self.add_permutation_button = Button(self.right_frame, text="New Permutation", command=_on_new_permutation)
         self.add_permutation_button.pack(pady=10)
         self.rename_permutation_button = Button(self.right_frame, text="Rename Permutation")
         self.rename_permutation_button.pack(pady=10)
@@ -209,52 +211,67 @@ class Encounters(tk.Tk):
             permutation_name = event.widget.get(event.widget.curselection()[0])
             _update_window_by_permutation(_get_and_set_permutation_index(permutation_name))
                 
-        # <<ListboxSelect>> event does not fucking work. It does weird things
-        # and crashes. I don't want to deal with it, thusly:
         self.permutation_listbox.bind(
-            "<FocusIn>",
+            "<<ListboxSelect>>",
             _listbox_callback
         )
 
         # Dropdowns
+        def _on_ship_select(event):
+            self.current_permutation_state.ship_by_class = event.widget.get()
         self.core_encounter_settings.ship_by_class_dropdown.bind(
             "<<ComboboxSelected>>",
-            self.current_permutation_state.on_ship_select
-        )
-        self.core_encounter_settings.job_override_dropdown.bind(
-            "<<ComboboxSelected>>",
-            self.current_permutation_state.on_job_override_select
-        )
-        self.core_encounter_settings.class_override_dropdown.bind(
-            "<<ComboboxSelected>>",
-            self.current_permutation_state.on_class_override_select
-        )
-        self.core_encounter_settings.formation_dropdown.bind(
-            "<<ComboboxSelected>>",
-            self.current_permutation_state.on_formation_select
-        )
-        self.core_encounter_settings.simultanious_creation_dropdown.bind(
-            "<<ComboboxSelected>>",
-            self.current_permutation_state.on_simultanious_creation_select
-        )
-        self.core_encounter_settings.behaviour_combobox.bind(
-            "<<ComboboxSelected>>",
-            self.current_permutation_state.on_behaviour_select
-        )
-        self.faction_selector.bind(
-            "<<ComboboxSelected>>",
-            self.current_permutation_state.on_faction_select
-        )
-        self.density_restriction_selector.bind(
-            "<<ComboboxSelected>>",
-            self.current_permutation_state.on_density_restriction_select
+            _on_ship_select
         )
 
-        # This has to be done because otherwise the default values won't spawn
-        self.permutation_listbox.insert(0, "Default")
-        self.permutation_listbox.selection_set(0)
-        self.permutation_listbox.focus_set()
-        self.permutation_listbox.event_generate("<FocusIn>")
+        def _on_job_select(event):
+            self.current_permutation_state.job_override = event.widget.get()
+        self.core_encounter_settings.job_override_dropdown.bind(
+            "<<ComboboxSelected>>",
+            _on_job_select
+        )
+
+        def _on_class_select(event):
+            self.current_permutation_state.class_override = event.widget.get()
+        self.core_encounter_settings.class_override_dropdown.bind(
+            "<<ComboboxSelected>>",
+            _on_class_select
+        )
+
+        def _on_formation_select(event):
+            self.current_permutation_state.formation = event.widget.get()
+        self.core_encounter_settings.formation_dropdown.bind(
+            "<<ComboboxSelected>>",
+            _on_formation_select
+        )
+
+        def _on_simultanious_creation_select(event):
+            self.current_permutation_state.simultanious_creation = event.widget.get()
+        self.core_encounter_settings.simultanious_creation_dropdown.bind(
+            "<<ComboboxSelected>>",
+            _on_simultanious_creation_select
+        )
+
+        def _on_behaviour_select(event):
+            self.current_permutation_state.behaviour = event.widget.get()
+        self.core_encounter_settings.behaviour_combobox.bind(
+            "<<ComboboxSelected>>",
+            _on_behaviour_select
+        )
+
+        def _on_faction_select(event):
+            self.current_permutation_state.faction[0] = event.widget.get()
+        self.faction_selector.dropdown.bind(
+            "<<ComboboxSelected>>",
+            _on_faction_select
+        )
+
+        def _on_density_restriction_select(event):
+            self.current_permutation_state.density_restriction[0] = event.widget.get()
+        self.density_restriction_selector.dropdown.bind(
+            "<<ComboboxSelected>>",
+            _on_density_restriction_select
+        )
 
     def create_list_from_ini_field(self, filename, field_name):
 

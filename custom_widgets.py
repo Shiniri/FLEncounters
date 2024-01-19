@@ -14,15 +14,18 @@ class FactionSelector(Frame):
         super().__init__(parent)
 
         self.option_var = StringVar()
-        self.dropdown = Combobox(self, textvariable=self.option_var, values=faction_list)
+        self.dropdown = Combobox(self, textvariable=self.option_var, values=faction_list, exportselection=False)
+        self.option_var.set("Faction")
         self.dropdown.pack(side="left", padx=2)
 
         self.entry1_var = StringVar()
-        self.entry1 = Entry(self, textvariable=self.entry1_var, width=5)
+        self.entry1 = Entry(self, textvariable=self.entry1_var, width=5, exportselection=False)
+        self.entry1_var.set("%")
         self.entry1.pack(side="left", padx=2)
 
         self.entry2_var = StringVar()
-        self.entry2 = Entry(self, textvariable=self.entry2_var, width=5)
+        self.entry2 = Entry(self, textvariable=self.entry2_var, width=5, exportselection=False)
+        self.entry2_var.set("INT")
         self.entry2.pack(side="left", padx=2)
 
 
@@ -32,11 +35,13 @@ class DensityRestrictionSelector(Frame):
         super().__init__(parent)
 
         self.option_var = StringVar()
-        self.dropdown = Combobox(self, textvariable=self.option_var, values=pilot_list)
+        self.dropdown = Combobox(self, textvariable=self.option_var, values=pilot_list, exportselection=False)
+        self.option_var.set("Density Restriction")
         self.dropdown.pack(side="left", padx=2)
 
         self.entry1_var = StringVar()
-        self.entry1 = Entry(self, textvariable=self.entry1_var, width=12)
+        self.entry1 = Entry(self, textvariable=self.entry1_var, width=12, exportselection=False)
+        self.entry1_var.set("INT")
         self.entry1.pack(side="left", padx=2)
 
        
@@ -54,7 +59,8 @@ class VariableSelector(Frame):
         self.label.pack(side="left", padx=2)
 
         self.entry_var = StringVar()
-        self.entry = Entry(self, textvariable=self.entry_var, width=5)
+        self.entry = Entry(self, textvariable=self.entry_var, width=5, exportselection=False)
+        self.entry_var.set("INT")
         self.entry.pack(side="left", padx=2)
 
 
@@ -100,11 +106,13 @@ class Min_Max_Setter(Frame):
         self.label.pack(side="left", padx=2)
 
         self.entry_min_var = StringVar()
-        self.entry_min = Entry(self, textvariable=self.entry_min_var, width=5)
+        self.entry_min = Entry(self, textvariable=self.entry_min_var, width=5, exportselection=False)
+        self.entry_min_var.set("INT")
         self.entry_min.pack(side="left", padx=2)
 
         self.entry_max_var = StringVar()
-        self.entry_max = Entry(self, textvariable=self.entry_max_var, width=5)
+        self.entry_max = Entry(self, textvariable=self.entry_max_var, width=5, exportselection=False)
+        self.entry_max_var.set("INT")
         self.entry_max.pack(side="left", padx=2)
 
 
@@ -137,8 +145,10 @@ class Core_Encounter_Specs(Frame):
         self.ship_by_class_dropdown = Combobox(
             self, 
             textvariable=self.ship_by_class_var,
-            values=ship_list
+            values=ship_list,
+            exportselection=False
         )
+        self.ship_by_class_var.set("Ship by class")
         self.ship_by_class_dropdown.pack(side="top", pady=2)
 
         # Min / Max of what @Milo?
@@ -150,8 +160,10 @@ class Core_Encounter_Specs(Frame):
         self.job_override_dropdown = Combobox(
             self,
             textvariable=self.job_override_var,
-            values=job_list
+            values=job_list,
+            exportselection=False
         )
+        self.job_override_var.set("Job Override")
         self.job_override_dropdown.pack(side="top", pady=2)
 
         # Class override
@@ -159,8 +171,10 @@ class Core_Encounter_Specs(Frame):
         self.class_override_dropdown = Combobox(
             self,
             textvariable=self.class_override_var,
-            values=ship_list
+            values=ship_list,
+            exportselection=False
         )
+        self.class_override_var.set("Class Override")
         self.class_override_dropdown.pack(side="top", pady=2)
 
         # Formation
@@ -168,8 +182,10 @@ class Core_Encounter_Specs(Frame):
         self.formation_dropdown = Combobox(
             self,
             textvariable=self.formation_var,
-            values=formation_list
+            values=formation_list,
+            exportselection=False
         )
+        self.formation_var.set("Formation")
         self.formation_dropdown.pack(side="top", pady=2)
 
         # Simultanious Creation
@@ -177,8 +193,10 @@ class Core_Encounter_Specs(Frame):
         self.simultanious_creation_dropdown = Combobox(
             self,
             textvariable=self.simultanious_creation_var,
-            values=["YES", "NO"]
+            values=["YES", "NO"],
+            exportselection=False
         )
+        self.simultanious_creation_var.set("Simultanious Creation")
         self.simultanious_creation_dropdown.pack(side="top", pady=2)
 
         # Behaviour
@@ -186,8 +204,10 @@ class Core_Encounter_Specs(Frame):
         self.behaviour_combobox = Combobox(
             self, 
             textvariable=self.behaviour_var,
-            values=["trade", "wander", "patrol_path"]
+            values=["trade", "wander", "patrol_path"],
+            exportselection=False
         )
+        self.behaviour_var.set("Behaviour")
         self.behaviour_combobox.pack(side="top", pady=2)
 
         # Creation Distance
