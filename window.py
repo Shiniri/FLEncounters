@@ -195,8 +195,8 @@ class Encounters(tk.Tk):
             self.density_restriction_selector.dropdown.set(permutation.density_restriction[0])
 
             # INT fields
-            self.core_encounter_settings.min_max_setter.entry_max_var.set(self.current_permutation_state.min_max[0])
-            self.core_encounter_settings.min_max_setter.entry_min_var.set(self.current_permutation_state.min_max[1])
+            self.core_encounter_settings.min_max_setter.entry_max_var.set(self.current_permutation_state.min_max[1])
+            self.core_encounter_settings.min_max_setter.entry_min_var.set(self.current_permutation_state.min_max[0])
             self.core_encounter_settings.creation_distance_setter.entry_var.set(self.current_permutation_state.creation_distance)
             self.core_encounter_settings.permutation_weight_setter.entry_var.set(self.current_permutation_state.permutation_weight)
             
@@ -271,6 +271,77 @@ class Encounters(tk.Tk):
         self.density_restriction_selector.dropdown.bind(
             "<<ComboboxSelected>>",
             _on_density_restriction_select
+        )
+
+        # Entry fields
+        def _on_min_select(event):
+            self.current_permutation_state.min_max[0] = event.widget.get()
+        self.core_encounter_settings.min_max_setter.entry_min.bind(
+            "<FocusOut>",
+            _on_min_select
+        )
+
+        def _on_max_select(event):
+            self.current_permutation_state.min_max[1] = event.widget.get()
+        self.core_encounter_settings.min_max_setter.entry_max.bind(
+            "<FocusOut>",
+            _on_max_select
+        )
+
+        def _on_creation_distance_select(event):
+            self.current_permutation_state.creation_distance = event.widget.get()
+        self.core_encounter_settings.creation_distance_setter.entry.bind(
+            "<FocusOut>",
+            _on_creation_distance_select
+        )
+
+        def _on_permutation_weight_select(event):
+            self.current_permutation_state.permutation_weight = event.widget.get()
+        self.core_encounter_settings.permutation_weight_setter.entry.bind(
+            "<FocusOut>",
+            _on_permutation_weight_select
+        )
+
+        def _on_faction_percentage_select(event):
+            self.current_permutation_state.faction[1] = event.widget.get()
+        self.faction_selector.entry1.bind(
+            "<FocusOut>",
+            _on_faction_percentage_select
+        )
+
+        def _on_faction_int_select(event):
+            self.current_permutation_state.faction[2] = event.widget.get()
+        self.faction_selector.entry2.bind(
+            "<FocusOut>",
+            _on_faction_int_select
+        )
+
+        def _on_density_restriction_int_select(event):
+            self.current_permutation_state.density_restriction[1] = event.widget.get()
+        self.density_restriction_selector.entry1.bind(
+            "<FocusOut>",
+            _on_density_restriction_int_select
+        )
+
+        def _on_relief_time_select(event):
+            self.current_permutation_state.relief = event.widget.get()
+        self.variable_frame.relief_time_setter.entry.bind(
+            "<FocusOut>",
+            _on_relief_time_select
+        )
+
+        def _on_repop_time_select(event):
+            self.current_permutation_state.repop = event.widget.get()
+        self.variable_frame.repop_time_setter.entry.bind(
+            "<FocusOut>",
+            _on_repop_time_select
+        )
+
+        def _on_density_select(event):
+            self.current_permutation_state.density = event.widget.get()
+        self.variable_frame.density_setter.entry.bind(
+            "<FocusOut>",
+            _on_density_select
         )
 
     def create_list_from_ini_field(self, filename, field_name):
