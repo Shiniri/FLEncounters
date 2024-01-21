@@ -1,6 +1,6 @@
 
 from tkinter.ttk import Combobox, Button
-from tkinter import Frame, Entry, StringVar, Label, Toplevel, Checkbutton
+from tkinter import Frame, Entry, StringVar, IntVar, Label, Toplevel, Checkbutton
 
 
 #-----------------------#
@@ -114,25 +114,6 @@ class Min_Max_Setter(Frame):
         self.entry_max = Entry(self, textvariable=self.entry_max_var, width=5, exportselection=False)
         self.entry_max_var.set("INT")
         self.entry_max.pack(side="left", padx=2)
-
-
-class Arrival_Popup(Toplevel):
-
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.buttons = []
-
-        button_texts = [
-            "buzz", "cruise", "object_all", "tradelane",
-            "object_capital", "object_station", "object_jump_gate",
-            "object_docking_ring"
-        ]
-        for button_text in button_texts:
-            self.buttons.append(Checkbutton(self, text=button_text))
-            self.buttons[-1].pack(side="top", pady=2)
-
-        self.save_button = Button(self, text="Save")
-        self.save_button.pack(side="top", pady=2)
         
 
 class Core_Encounter_Specs(Frame):
@@ -218,12 +199,28 @@ class Core_Encounter_Specs(Frame):
         self.permutation_weight_setter = VariableSelector(self, "Permutation Weight: ")
         self.permutation_weight_setter.pack(side="top", pady=2)
 
-        # Button which opens window with arrival checkboxes
-        self.checkbox_button = Button(self, text="Set Arrival Type", command=self.open_checkbox_popup)
-        self.checkbox_button.pack(side="top", pady=2)
+        # Arrival Types
+        self.buttons = []
+        self.button_vars = [IntVar() for i in range(8)]
+        button_texts = [
+            "buzz", "cruise", "object_all", "tradelane",
+            "object_capital", "object_station", "object_jump_gate",
+            "object_docking_ring"
+        ]
+        for i, button_text in enumerate(button_texts):
+            self.buttons.append(Checkbutton(self, text=button_text, variable=self.button_vars[i]))
+            self.buttons[-1].pack(side="top")
 
 
-    def open_checkbox_popup(self):
-        top = Arrival_Popup(self)
-        top.title("Set Arrival Types")
-        top.geometry("400x300")
+class Rename_Popup(Toplevel):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.rename_entry_var = StringVar()
+        self.rename_entry = Entry(self, textvariable=self.rename_entry_var, width=25, exportselection=False)
+        self.rename_entry_var.set("New Permutation")
+        self.rename_entry.pack(pady=5)
+
+        self.save_button = Button(self, text="Rename")
+        self.save_button.pack()

@@ -18,7 +18,7 @@ class Permutation_State:
         self.behaviour = "Behaviour"
         self.creation_distance = "INT"
         self.permutation_weight = "INT"
-        self.arrival_types = (False, False, False, False, False, False, False, False)
+        self.arrival_types = [0, 0, 0, 0, 0, 0, 0, 0]
         self.faction = ["Faction", "%", "INT"]
         self.density_restriction = ["Density Restriction", "INT"]
         self.relief = "INT"

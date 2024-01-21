@@ -18,7 +18,8 @@ from custom_widgets import (
     FactionSelector, 
     DensityRestrictionSelector, 
     VariableSelector, VariableFrame,
-    Core_Encounter_Specs
+    Core_Encounter_Specs,
+    Rename_Popup
 )
 from permutation_state import Permutation_State
 
@@ -62,9 +63,10 @@ class Encounters(tk.Tk):
         self.install_directory = install_directory
         self.parser = Ini_Parser()
         self.title("Encounters")
-        self.geometry("620x420")
+        self.geometry("620x490")
         # Handles saving data the user has entered
         self.permutation_states = []
+        self.current_permutation_state = None
 
         self.construct_main_window()
 
@@ -134,7 +136,10 @@ class Encounters(tk.Tk):
 
         def _on_new_permutation():
             self.permutation_states.append(Permutation_State(f"Default {len(self.permutation_states)+1}"))
-            self.permutation_listbox.insert(2, f"Default {len(self.permutation_states)}")
+            self.permutation_listbox.insert(0, f"Default {len(self.permutation_states)}")
+            self.permutation_listbox.selection_clear(0, "end")
+            self.permutation_listbox.select_set(0)
+            
 
         self.add_permutation_button = Button(self.right_frame, text="New Permutation", command=_on_new_permutation)
         self.add_permutation_button.pack(pady=10)
@@ -183,6 +188,12 @@ class Encounters(tk.Tk):
                 # TODO: Some error handling?
 
         def _update_window_by_permutation(permutation):
+            # Name
+            selected_index = self.permutation_listbox.curselection()[0]
+            self.permutation_listbox.delete(selected_index)
+            self.permutation_listbox.insert(selected_index, self.current_permutation_state.name)
+            self.permutation_listbox.select_set(selected_index)
+
             # Dropdowns 
             self.core_encounter_settings.ship_by_class_dropdown.set(permutation.ship_by_class)
             self.core_encounter_settings.job_override_dropdown.set(permutation.job_override)
@@ -207,6 +218,10 @@ class Encounters(tk.Tk):
             self.variable_frame.repop_time_setter.entry_var.set(self.current_permutation_state.repop)
             self.variable_frame.density_setter.entry_var.set(self.current_permutation_state.density)
 
+            # Checkboxes
+            for i, arrival_type_var in enumerate(self.core_encounter_settings.button_vars):
+                arrival_type_var.set(self.current_permutation_state.arrival_types[i])
+
         def _listbox_callback(event):
             permutation_name = event.widget.get(event.widget.curselection()[0])
             _update_window_by_permutation(_get_and_set_permutation_index(permutation_name))
@@ -216,7 +231,25 @@ class Encounters(tk.Tk):
             _listbox_callback
         )
 
+        # Rename Permutation
+        # This is so fucking disgusting
+        def _on_rename_permutation():
+            top = Rename_Popup(self)
+            top.geometry("250x100")
+            top.title("Rename Permutation")
+            def _rename():
+                entered_name = top.rename_entry_var.get()
+                self.current_permutation_state.name = entered_name
+                _update_window_by_permutation(self.current_permutation_state)
+                top.destroy()
+            top.save_button.configure(command=_rename)
+            top.mainloop()
+
+        self.rename_permutation_button.configure(text="Rename Permutation", command=_on_rename_permutation)
+
         # Dropdowns
+        # TODO: Instead of boilerplate create map of what widgets belongs to which variable
+        # in the permutation state class
         def _on_ship_select(event):
             self.current_permutation_state.ship_by_class = event.widget.get()
         self.core_encounter_settings.ship_by_class_dropdown.bind(
@@ -343,6 +376,20 @@ class Encounters(tk.Tk):
             "<FocusOut>",
             _on_density_select
         )
+
+        # Arrival Type
+        def _on_arrival_type_select(event):
+            # No permutation state selected
+            if self.current_permutation_state == None:
+                return
+            for i, variable in enumerate(self.core_encounter_settings.button_vars):
+                self.current_permutation_state.arrival_types[i] = variable.get()
+        for arrival_type_button in self.core_encounter_settings.buttons:
+            arrival_type_button.bind(
+                "<Leave>",
+                _on_arrival_type_select
+            )
+        
 
     def create_list_from_ini_field(self, filename, field_name):
 
