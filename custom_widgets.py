@@ -92,6 +92,17 @@ class VariableFrame(Frame):
         self.spawn_chance_label.pack(side="top", fill="x", pady=5)
 
 
+class Spawnable_Ships_List(Frame):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.spawnable_ships_var = StringVar()
+        self.spawnable_ships_label = Label(self, textvariable=self.spawnable_ships_var)
+        self.spawnable_ships_var.set("Spawnable ships: ")
+        self.spawnable_ships_label.pack(side="top", pady=5)
+
+
 #-----------------------#
 #   LEFT-SIDE WIDGETS   #
 #-----------------------#
@@ -169,16 +180,16 @@ class Core_Encounter_Specs(Frame):
         self.formation_var.set("Formation")
         self.formation_dropdown.pack(side="top", pady=2)
 
-        # Simultanious Creation
-        self.simultanious_creation_var = StringVar()
-        self.simultanious_creation_dropdown = Combobox(
+        # Simultaneous Creation
+        self.simultaneous_creation_var = StringVar()
+        self.simultaneous_creation_dropdown = Combobox(
             self,
-            textvariable=self.simultanious_creation_var,
+            textvariable=self.simultaneous_creation_var,
             values=["YES", "NO"],
             exportselection=False
         )
-        self.simultanious_creation_var.set("Simultanious Creation")
-        self.simultanious_creation_dropdown.pack(side="top", pady=2)
+        self.simultaneous_creation_var.set("Simultaneous Creation")
+        self.simultaneous_creation_dropdown.pack(side="top", pady=2)
 
         # Behaviour
         self.behaviour_var = StringVar()

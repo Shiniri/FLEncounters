@@ -19,7 +19,8 @@ from custom_widgets import (
     DensityRestrictionSelector, 
     VariableSelector, VariableFrame,
     Core_Encounter_Specs,
-    Rename_Popup
+    Rename_Popup,
+    Spawnable_Ships_List
 )
 from permutation_state import Permutation_State
 
@@ -138,7 +139,8 @@ class Encounters(tk.Tk):
             self.permutation_states.append(Permutation_State(f"Default {len(self.permutation_states)+1}"))
             self.permutation_listbox.insert(0, f"Default {len(self.permutation_states)}")
             self.permutation_listbox.selection_clear(0, "end")
-            self.permutation_listbox.select_set(0)
+            self.permutation_listbox.selection_set(0)
+            self.permutation_listbox.event_generate("<<ListboxSelect>>")
             
 
         self.add_permutation_button = Button(self.right_frame, text="New Permutation", command=_on_new_permutation)
@@ -166,6 +168,10 @@ class Encounters(tk.Tk):
         self.variable_frame = VariableFrame(parent=self.centre_frame)
         self.variable_frame.pack(pady=10)
 
+        # Spawnable Ships list
+        self.spawnable_ships = Spawnable_Ships_List(parent=self.centre_frame)
+        self.spawnable_ships.pack(pady=10)
+
         #   LEFT / ENCOUNTER COLUMN     #
 
         # Core Encounter Settings
@@ -179,7 +185,18 @@ class Encounters(tk.Tk):
 
         #   Callback binds  #
 
+        # Create Encounter
+        def _create_encounter_ini():
+            for permutation in self.permutation_states:
+                base_encounter_formation_str = (
+                    "[EncounterFormation]"
+                    f"ship_by_class = {permutation.min_max[0]}, {permutation.min_max[1]}, {permutation.ship_by_class}"
+                )
+        self.create_encounter_button.configure(command=_create_encounter_ini)
+
         # Permutation Selector
+        # Permutation in the next function refers to the global var /
+        # class, not the listbox entry!!
         def _get_and_set_permutation_index(permutation_name):
             for permutation in self.permutation_states:
                 if permutation.name == permutation_name:
@@ -187,6 +204,11 @@ class Encounters(tk.Tk):
                     return permutation
                 # TODO: Some error handling?
 
+        def _get_permutation_index(permutation_name):
+            for permutation_index in range(len(self.permutation_states)):
+                if self.permutation_states[permutation_index].name == permutation_name:
+                    return permutation_index
+                
         def _update_window_by_permutation(permutation):
             # Name
             selected_index = self.permutation_listbox.curselection()[0]
@@ -199,7 +221,7 @@ class Encounters(tk.Tk):
             self.core_encounter_settings.job_override_dropdown.set(permutation.job_override)
             self.core_encounter_settings.class_override_dropdown.set(permutation.class_override)
             self.core_encounter_settings.formation_dropdown.set(permutation.formation)
-            self.core_encounter_settings.simultanious_creation_dropdown.set(permutation.simultanious_creation)
+            self.core_encounter_settings.simultaneous_creation_dropdown.set(permutation.simultaneous_creation)
             self.core_encounter_settings.behaviour_combobox.set(permutation.behaviour)
             
             self.faction_selector.dropdown.set(permutation.faction[0])
@@ -238,14 +260,24 @@ class Encounters(tk.Tk):
             top.geometry("250x100")
             top.title("Rename Permutation")
             def _rename():
+                existing_names = [permutation_state.name for permutation_state in self.permutation_states]
                 entered_name = top.rename_entry_var.get()
-                self.current_permutation_state.name = entered_name
-                _update_window_by_permutation(self.current_permutation_state)
+                if entered_name in existing_names:
+                    messagebox.showerror("Error", "This permutation name already exists.")
+                else:
+                    self.current_permutation_state.name = entered_name
+                    _update_window_by_permutation(self.current_permutation_state)
                 top.destroy()
             top.save_button.configure(command=_rename)
             top.mainloop()
-
         self.rename_permutation_button.configure(text="Rename Permutation", command=_on_rename_permutation)
+
+        # Delete Permutation
+        def _on_delete_permutation():
+            corresponding_permutation_index = _get_permutation_index(self.permutation_listbox.get(self.permutation_listbox.curselection()[0]))
+            self.permutation_states.pop(corresponding_permutation_index)
+            self.permutation_listbox.delete(self.permutation_listbox.curselection()[0])
+        self.delete_permutation_button.configure(command=_on_delete_permutation)
 
         # Dropdowns
         # TODO: Instead of boilerplate create map of what widgets belongs to which variable
@@ -278,11 +310,11 @@ class Encounters(tk.Tk):
             _on_formation_select
         )
 
-        def _on_simultanious_creation_select(event):
-            self.current_permutation_state.simultanious_creation = event.widget.get()
-        self.core_encounter_settings.simultanious_creation_dropdown.bind(
+        def _on_simultaneous_creation_select(event):
+            self.current_permutation_state.simultaneous_creation = event.widget.get()
+        self.core_encounter_settings.simultaneous_creation_dropdown.bind(
             "<<ComboboxSelected>>",
-            _on_simultanious_creation_select
+            _on_simultaneous_creation_select
         )
 
         def _on_behaviour_select(event):
@@ -389,7 +421,113 @@ class Encounters(tk.Tk):
                 "<Leave>",
                 _on_arrival_type_select
             )
-        
+
+        # Create encounter button
+            
+        # Apparently this is the python way to do this
+        def _is_int(num):
+            try:
+                int(num)
+                return True
+            except:
+                return False
+            
+        def _is_float(num):
+            try:
+                float(num)
+                return True
+            except:
+                return False
+            
+
+        def _validate(permutation):
+            # Has user set a ship class? / Is it still the default values?
+            # 1. Grab all default values from the permutation state class
+            default_permutation = Permutation_State()
+            default_permutation_vars = {key:value for key, value in default_permutation.__dict__.items() if not key.startswith('__') and not callable(key)}
+            current_permutation_vars = {key:value for key, value in permutation.__dict__.items() if not key.startswith('__') and not callable(key)}
+
+            for default_key in default_permutation_vars.keys():
+                # These settings do not have to be specified / are valid defaults
+                if default_key == "name" or default_key == "arrival_types":
+                    continue
+                # This means it's still the default setting
+                if default_permutation_vars[default_key] == current_permutation_vars[default_key]:
+                    messagebox.showerror("Error", f"You haven't provided a valid value for the setting {default_key} in permutation '{permutation.name}'.")
+                    return False
+                
+            # Are all entry fields convertible to the types needed in the permutation state?
+            if not _is_int(permutation.min_max[0]) or not _is_int(permutation.min_max[1]):
+                messagebox.showerror("Error", f"Please provide an Integer value in the min max field of permutation '{permutation.name}'.")
+                return False
+            if not _is_int(permutation.creation_distance):
+                messagebox.showerror("Error", f"Please provide an Integer value in the creation distance field of permutation '{permutation.name}'.")
+                return False
+            if not _is_int(permutation.permutation_weight):
+                messagebox.showerror("Error", f"Please provide an Integer value in the permutation weight field of permutation '{permutation.name}'.")
+                return False
+            if not _is_int(permutation.faction[2]):
+                messagebox.showerror("Error", f"Please provide an Integer value in the faction field of permutation '{permutation.name}'.")
+                return False
+            if not _is_int(permutation.density_restriction[1]):
+                messagebox.showerror("Error", f"Please provide an Integer value in the density restriction field of permutation '{permutation.name}'.")
+                return False
+            if not _is_int(permutation.relief):
+                messagebox.showerror("Error", f"Please provide an Integer value in the relief field of permutation '{permutation.name}'.")
+                return False
+            if not _is_int(permutation.repop):
+                messagebox.showerror("Error", f"Please provide an Integer value in the repop field of permutation '{permutation.name}'.")
+                return False
+            if not _is_int(permutation.density):
+                messagebox.showerror("Error", f"Please provide an Integer value in the density field of permutation '{permutation.name}'.")
+                return False
+            if not _is_float(permutation.faction[1]):
+                messagebox.showerror("Error", f"Please provide a Float(-convertible) value in the faction field of permutation '{permutation.name}'.")
+                return False
+            
+            return True
+
+        def _on_encounter_create():
+
+            # Construct the encounter string from all existing permutations
+            full_encounter = ""
+            # I know this button thing is dumb, but there is a reason for it:
+            # tkinter checkbuttons apparently have no 'text' attribute, even
+            # though you set it upon creation, but whatever...
+            button_texts = [
+                "buzz", "cruise", "object_all", "tradelane",
+                "object_capital", "object_station", "object_jump_gate",
+                "object_docking_ring"
+            ]   
+
+            for permutation_state in self.permutation_states:
+                if not _validate(permutation_state):
+                    return
+                base_str = (
+                    f"[{permutation_state.name}]\n"
+                    f"ship_by_class = {permutation_state.min_max[0]}, {permutation_state.min_max[1]}, {permutation_state.ship_by_class}\n"
+                    f"pilot_job = {permutation_state.job_override}\n"
+                    f"formation_by_class = {permutation_state.formation}\n"
+                    f"behaviour = {permutation_state.behaviour}\n"
+                    f"allow_simultaneous_creation = {permutation_state.simultaneous_creation}\n"
+                )
+                arrival_type_str = "arrival = " + ", ".join([button_text for i, button_text in enumerate(button_texts) if permutation_state.arrival_types[i] == 1])
+                solar_str = (
+                    "; UNCOMMENT AND ADD IN APPROPRIATE SOLAR. THIS WILL BE IMPROVED IN A LATER VERSION :)\n"
+                    f";density = {permutation_state.density}\n"
+                    f";repop_time = {permutation_state.repop}\n"
+                    f";relief_time = {permutation_state.relief}\n"
+                    f";faction = {permutation_state.faction[0]}\n"
+                    f";density_restriction = {permutation_state.density_restriction}\n"
+                    ";max_battle_size = 8\n"
+                    ";encounter_name = some_nick"
+                )   #TODO max_battle_size as setable parameter in the GUI
+                    #TODO encounter name
+                full_encounter += (base_str+arrival_type_str+"\n\n"+solar_str+"\n\n")
+            with filedialog.asksaveasfile(title="Please select an encounter file to save in.") as encounter_file:
+                encounter_file.write(full_encounter)
+        self.create_encounter_button.configure(command=_on_encounter_create)
+                
 
     def create_list_from_ini_field(self, filename, field_name):
 
