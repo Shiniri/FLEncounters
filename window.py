@@ -17,7 +17,7 @@ from tkinter import ttk, filedialog, messagebox, Button, Listbox
 from custom_widgets import (
     FactionSelector, 
     DensityRestrictionSelector, 
-    VariableSelector, VariableFrame,
+    VariableFrame,
     Core_Encounter_Specs,
     Rename_Popup,
     Spawnable_Ships_List
@@ -26,7 +26,6 @@ from permutation_state import Permutation_State
 
 # Parsing
 from ini_parser import Ini_Parser
-import os
 
 # Other stuff
 import itertools
@@ -67,9 +66,11 @@ class Encounters(tk.Tk):
         self.geometry("620x490")
         # Handles saving data the user has entered
         self.permutation_states = []
-        self.current_permutation_state = None
+        default_permutation_state = Permutation_State()
+        self.current_permutation_state = default_permutation_state
 
         self.construct_main_window()
+
 
     def construct_main_window(self):
 
@@ -97,38 +98,12 @@ class Encounters(tk.Tk):
         self.permutation_label.pack(pady=10)
 
         # Read data
-        self.available_pilots = self.create_list_from_ini_field(
-            "pilots_population.ini",
-            "nickname"
-        )
-        self.available_factions = self.create_list_from_ini_field(
-            "faction_prop.ini",
-            "affiliation"
-        )
-        self.available_shipclasses = self.create_list_from_ini_field(
-            "shipclasses.ini",
-            "member"
-        )
-        self.available_npcclasses = self.create_list_from_ini_field(
-            "npcships.ini",
-            "npc_class"
-        )
-        self.available_formations = self.create_list_from_ini_field(
-            "formations.ini",
-            "nickname"
-        )
+        self.available_pilots = self.create_list_from_ini_field("pilots_population.ini", "nickname")
+        self.available_factions = self.create_list_from_ini_field("faction_prop.ini", "affiliation")
+        self.available_shipclasses = self.create_list_from_ini_field("shipclasses.ini", "member")
+        self.available_npcclasses = self.create_list_from_ini_field("npcships.ini", "npc_class")
+        self.available_formations = self.create_list_from_ini_field("formations.ini","nickname")
 
-        #-----------------------#
-        #   WIDGETS START HERE  #
-        #-----------------------#
-        """
-            In the future I would like to parse existing encounters here,
-            so they can be edited easily, which will require a list of existing
-            encounters, which is created from ones already saved.
-            (Difference exporting / saving?) For now I will only put a list
-            of permutations here, because it's quicker to get a usable tool 
-            this way.
-        """
 
         #   RIGHT / PERMUTATIONS COLUMN     #
         
@@ -154,6 +129,7 @@ class Encounters(tk.Tk):
         self.create_encounter_button = Button(self.right_frame, text="CREATE ENCOUNTER!", font=("Arial", 14))
         self.create_encounter_button.pack(pady=10)
 
+
         #   CENTRE / SYSTEM COLUMN   #
 
         # Faction Selector
@@ -172,6 +148,7 @@ class Encounters(tk.Tk):
         self.spawnable_ships = Spawnable_Ships_List(parent=self.centre_frame)
         self.spawnable_ships.pack(pady=10)
 
+
         #   LEFT / ENCOUNTER COLUMN     #
 
         # Core Encounter Settings
@@ -182,6 +159,7 @@ class Encounters(tk.Tk):
             formation_list=self.available_formations
         )
         self.core_encounter_settings.pack(pady=10)
+
 
         #   Callback binds  #
 
@@ -202,7 +180,6 @@ class Encounters(tk.Tk):
                 if permutation.name == permutation_name:
                     self.current_permutation_state = permutation
                     return permutation
-                # TODO: Some error handling?
 
         def _get_permutation_index(permutation_name):
             for permutation_index in range(len(self.permutation_states)):
@@ -280,134 +257,64 @@ class Encounters(tk.Tk):
         self.delete_permutation_button.configure(command=_on_delete_permutation)
 
         # Dropdowns
-        # TODO: Instead of boilerplate create map of what widgets belongs to which variable
-        # in the permutation state class
         def _on_ship_select(event):
             self.current_permutation_state.ship_by_class = event.widget.get()
-        self.core_encounter_settings.ship_by_class_dropdown.bind(
-            "<<ComboboxSelected>>",
-            _on_ship_select
-        )
-
         def _on_job_select(event):
             self.current_permutation_state.job_override = event.widget.get()
-        self.core_encounter_settings.job_override_dropdown.bind(
-            "<<ComboboxSelected>>",
-            _on_job_select
-        )
-
         def _on_class_select(event):
             self.current_permutation_state.class_override = event.widget.get()
-        self.core_encounter_settings.class_override_dropdown.bind(
-            "<<ComboboxSelected>>",
-            _on_class_select
-        )
-
         def _on_formation_select(event):
             self.current_permutation_state.formation = event.widget.get()
-        self.core_encounter_settings.formation_dropdown.bind(
-            "<<ComboboxSelected>>",
-            _on_formation_select
-        )
-
         def _on_simultaneous_creation_select(event):
             self.current_permutation_state.simultaneous_creation = event.widget.get()
-        self.core_encounter_settings.simultaneous_creation_dropdown.bind(
-            "<<ComboboxSelected>>",
-            _on_simultaneous_creation_select
-        )
-
         def _on_behaviour_select(event):
             self.current_permutation_state.behaviour = event.widget.get()
-        self.core_encounter_settings.behaviour_combobox.bind(
-            "<<ComboboxSelected>>",
-            _on_behaviour_select
-        )
-
         def _on_faction_select(event):
             self.current_permutation_state.faction[0] = event.widget.get()
-        self.faction_selector.dropdown.bind(
-            "<<ComboboxSelected>>",
-            _on_faction_select
-        )
-
         def _on_density_restriction_select(event):
             self.current_permutation_state.density_restriction[0] = event.widget.get()
-        self.density_restriction_selector.dropdown.bind(
-            "<<ComboboxSelected>>",
-            _on_density_restriction_select
-        )
+
+        self.core_encounter_settings.ship_by_class_dropdown.bind("<<ComboboxSelected>>", _on_ship_select)
+        self.core_encounter_settings.job_override_dropdown.bind("<<ComboboxSelected>>", _on_job_select)
+        self.core_encounter_settings.class_override_dropdown.bind("<<ComboboxSelected>>", _on_class_select)
+        self.core_encounter_settings.formation_dropdown.bind("<<ComboboxSelected>>", _on_formation_select)
+        self.core_encounter_settings.simultaneous_creation_dropdown.bind("<<ComboboxSelected>>", _on_simultaneous_creation_select)
+        self.core_encounter_settings.behaviour_combobox.bind("<<ComboboxSelected>>", _on_behaviour_select)
+        self.faction_selector.dropdown.bind("<<ComboboxSelected>>", _on_faction_select)
+        self.density_restriction_selector.dropdown.bind("<<ComboboxSelected>>", _on_density_restriction_select)
 
         # Entry fields
         def _on_min_select(event):
             self.current_permutation_state.min_max[0] = event.widget.get()
-        self.core_encounter_settings.min_max_setter.entry_min.bind(
-            "<FocusOut>",
-            _on_min_select
-        )
-
         def _on_max_select(event):
             self.current_permutation_state.min_max[1] = event.widget.get()
-        self.core_encounter_settings.min_max_setter.entry_max.bind(
-            "<FocusOut>",
-            _on_max_select
-        )
-
         def _on_creation_distance_select(event):
             self.current_permutation_state.creation_distance = event.widget.get()
-        self.core_encounter_settings.creation_distance_setter.entry.bind(
-            "<FocusOut>",
-            _on_creation_distance_select
-        )
-
         def _on_permutation_weight_select(event):
             self.current_permutation_state.permutation_weight = event.widget.get()
-        self.core_encounter_settings.permutation_weight_setter.entry.bind(
-            "<FocusOut>",
-            _on_permutation_weight_select
-        )
-
         def _on_faction_percentage_select(event):
             self.current_permutation_state.faction[1] = event.widget.get()
-        self.faction_selector.entry1.bind(
-            "<FocusOut>",
-            _on_faction_percentage_select
-        )
-
         def _on_faction_int_select(event):
             self.current_permutation_state.faction[2] = event.widget.get()
-        self.faction_selector.entry2.bind(
-            "<FocusOut>",
-            _on_faction_int_select
-        )
-
         def _on_density_restriction_int_select(event):
             self.current_permutation_state.density_restriction[1] = event.widget.get()
-        self.density_restriction_selector.entry1.bind(
-            "<FocusOut>",
-            _on_density_restriction_int_select
-        )
-
         def _on_relief_time_select(event):
             self.current_permutation_state.relief = event.widget.get()
-        self.variable_frame.relief_time_setter.entry.bind(
-            "<FocusOut>",
-            _on_relief_time_select
-        )
-
         def _on_repop_time_select(event):
             self.current_permutation_state.repop = event.widget.get()
-        self.variable_frame.repop_time_setter.entry.bind(
-            "<FocusOut>",
-            _on_repop_time_select
-        )
-
         def _on_density_select(event):
             self.current_permutation_state.density = event.widget.get()
-        self.variable_frame.density_setter.entry.bind(
-            "<FocusOut>",
-            _on_density_select
-        )
+
+        self.core_encounter_settings.min_max_setter.entry_min.bind("<FocusOut>", _on_min_select)
+        self.core_encounter_settings.min_max_setter.entry_max.bind("<FocusOut>", _on_max_select)
+        self.core_encounter_settings.creation_distance_setter.entry.bind("<FocusOut>", _on_creation_distance_select)
+        self.core_encounter_settings.permutation_weight_setter.entry.bind("<FocusOut>", _on_permutation_weight_select)
+        self.faction_selector.entry1.bind("<FocusOut>", _on_faction_percentage_select)
+        self.faction_selector.entry2.bind("<FocusOut>", _on_faction_int_select)
+        self.density_restriction_selector.entry1.bind("<FocusOut>", _on_density_restriction_int_select)
+        self.variable_frame.relief_time_setter.entry.bind("<FocusOut>", _on_relief_time_select)
+        self.variable_frame.repop_time_setter.entry.bind("<FocusOut>", _on_repop_time_select)
+        self.variable_frame.density_setter.entry.bind("<FocusOut>", _on_density_select)
 
         # Arrival Type
         def _on_arrival_type_select(event):

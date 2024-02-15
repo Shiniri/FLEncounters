@@ -143,7 +143,7 @@ class Core_Encounter_Specs(Frame):
         self.ship_by_class_var.set("Ship by class")
         self.ship_by_class_dropdown.pack(side="top", pady=2)
 
-        # Min / Max of what @Milo?
+        # Min / Max
         self.min_max_setter = Min_Max_Setter(self)
         self.min_max_setter.pack(side="top", pady=5)
 
