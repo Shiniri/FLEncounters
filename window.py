@@ -1,15 +1,4 @@
 
-#-------------------------------------------------------------------------------#
-#   ~ The things yond require doing ~                                           #
-#   1. Reduceth the amount of boileth'r'd plates in the list functs             #
-#   2. Unifyeth frames things wend into                                         #
-#   3. Some variables couldst beest m're descriptive                            #
-#   4. Map dropdowns to more descriptive names                                  #
-#   5. Allign things more nicely                                                #
-#   6. Feature: Open existing Encounters                                        #
-#   7. Split Columns into multiple files for ease of access                     #
-#-------------------------------------------------------------------------------#
-
 # GUI
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, Button, Listbox
@@ -445,7 +434,7 @@ class Encounters(tk.Tk):
         # (parser fails silently / outputs [])
         if ini_file == []:
             messagebox.showerror("Error", f"Failed to find {filename} at specified location.")
-            self.destroy
+            self.destroy()
 
         # Return unique values for field
         values = [block[field_name] for block in ini_file if field_name in block]

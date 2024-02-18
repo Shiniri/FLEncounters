@@ -34,18 +34,20 @@ class Ini_Parser():
         except:
             return []
         
+
     def parse(self, file_content : str):
         # This will looks like
         # [{key: [values], key2: [values]}, {...}, ...]
         result = []
 
         # newlines seem to be reliable enough
-        blocks = re.split(r'\r\r|\n\n', file_content)
+        blocks = re.split(r"\r\r|\n\n", file_content)
         for block in blocks:
             block_dict = {}
-            entries = re.split(r'\r|\n', block)
+            entries = re.split(r"\r|\n", block)
             for entry in entries:
-                if entry == '' or bool(re.search(r'\[', entry)):
+                # Empty lines, block names, comments
+                if entry == "" or bool(re.search(r"\[", entry)) or entry.startswith(";") or entry.startswith("#"):
                     continue
                 key = entry.split("=")[0].strip()
                 values = entry.split("=")[1].strip()
@@ -55,5 +57,6 @@ class Ini_Parser():
                     block_dict[key] = values.split(", ")
             if block_dict != {}:
                 result.append(block_dict)
+                print("LAST BLOCK: ", result[-1])
         
         return result
